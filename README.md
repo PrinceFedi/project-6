@@ -3,40 +3,81 @@ Brevet time calculator with MongoDB, and a RESTful API!
 
 Read about MongoEngine and Flask-RESTful before you start: [http://docs.mongoengine.org/](http://docs.mongoengine.org/), [https://flask-restful.readthedocs.io/en/latest/](https://flask-restful.readthedocs.io/en/latest/).
 
-## Before you begin
-You *HAVE TO* copy `.env-example` into `.env` and specify your container port numbers there!
-Note that the default values (5000 and 5000) will work!
 
-*DO NOT PLACE LOCAL PORTS IN YOUR COMPOSE FILE!*
 
-## Overview
-
-You will reuse your code from Project 5, which already has two services:
-
-* Brevets
-	* The entire web service
-* MongoDB
-
-For this project, you will re-organize `Brevets` into two separate services:
+For this project, `Brevets` was organized into two separate services:
 
 * Web (Front-end)
 	* Time calculator (basically everything you had in project 4)
 * API (Back-end)
 	* A RESTful service to expose/store structured data in MongoDB.
 
-## Tasks
+## models.py:
 
-* Implement a RESTful API in `api/`:
-	* Write a data schema using MongoEngine for Checkpoints and Brevets:
-		* `Checkpoint`:
-			* `distance`: float, required, (checkpoint distance in kilometers), 
-			* `location`: string, optional, (checkpoint location name), 
-			* `open_time`: datetime, required, (checkpoint opening time), 
-			* `close_time`: datetime, required, (checkpoint closing time).
-		* `Brevet`:
-			* `length`: float, required, (brevet distance in kilometers),
-			* `start_time`: datetime, required, (brevet start time),
-			* `checkpoints`: list of `Checkpoint`s, required, (checkpoints).
+This file defines two MongoEngine models, Checkpoint and Brevet.
+
+The Checkpoint model is an embedded document that represents our list of brevet attributes in which we will store upon insertion and return upon fetch. . It has the following fields:
+
+* `km`: A required float field representing the distance of the checkpoint in kilometers.
+* `miles`: A required float field representing the distance of the checkpoint in miles.
+* `location`: An optional string field representing the name of the checkpoint's location.
+* `open`: A required string field representing the opening time of the checkpoint.
+* `close`: A required string field representing the closing time of the checkpoint.
+
+The Brevet model is our schema which contains the 3 common attributes of our brevet:
+
+* `length`: A required float field representing the length of the brevet in kilometers.
+* `start_time`: A required datetime field representing the start time of the brevet. 
+* `checkpoints`: A required list field of Checkpoint embedded documents representing the checkpoints on the brevet route.
+
+## brevet.py and brevets.py
+
+This file defines a Flask-RESTful Resource called BrevetResource that interacts with the Brevet model.
+
+
+BrevetResource provides the following endpoints:
+
+`GET /brevet/<id>`: Retrieves a brevet with the given `id`.
+`PUT /brevet/<id>`: Updates a brevet with the given `id`.
+`DELETE /brevet/<id>`: Deletes a brevet with the given `id`.
+
+BrevetsResource provides
+`GET /brevets`: Gets data from where each and every brevet is stored.
+`POST /brevets`: Saves our Brevet object and its correct fields.
+
+When returning responses, the BrevetResource provides two options:
+
+1. Return a Response object with the JSON payload, mimetype, and status code.
+
+2. Return a Python dictionary with the JSON payload and status code.
+
+Flask-RESTful's default behavior is to return a Python dictionary with the JSON payload and status code. 
+However, since the Brevet model returns a MongoEngine query object instead of a dictionary, 
+the `to_json()` method is used to convert the query result to a JSON string before returning it as a Response object.
+
+## flask_api.py:
+
+This file defines a Flask app and RESTful API that interacts with a MongoDB database.
+
+The app connects to the MongoDB server specified in the MONGODB_HOSTNAME environment variable, and exposes our two resources: 
+`BrevetResource` and `BrevetsResource`.
+
+`BrevetResource` corresponds to a single brevet document in the database and supports the HTTP methods GET, PUT, 
+and DELETE at the path /api/brevet/<id>, where <id> is the ID of the brevet.
+
+`BrevetsResource` corresponds to all brevet documents in the database and supports the HTTP methods GET and POST at the path /api/brevets.
+
+When the app is run, it starts a Flask server on the IP address `0.0.0.0` and the port specified in the PORT environment 
+variable, or `5000` if PORT is not set. If the DEBUG environment variable is set, Flask will run in debug mode.
+
+## flask_brevets.py:
+
+In order to fully remove the database connection out of our initial flask app, we had to delete all of the logic in our mongodb python script.
+From there, the previous mongodb methods `brevets_insert()` and `brevets_fetch()` were modified to respond to the api request using the `requests` library
+
+### Curl Commands:
+
+
 	* Using the schema, build a RESTful API with the resource `/brevets/`:
 		* GET `http://API:PORT/api/brevets` should display all brevets stored in the database.
 		* GET `http://API:PORT/api/brevet/ID` should display brevet with id `ID`.
@@ -54,19 +95,7 @@ For this project, you will re-organize `Brevets` into two separate services:
 
 As always you'll turn in your `credentials.ini` through Canvas.
 
-## Grading Rubric
-
-* If your code works as expected: 100 points. This includes:
-    * API routes as outlined above function exactly the way expected,
-    * Web application works as expected in project 5,
-    * README is updated with the necessary details.
-
-* If the front-end service does not work, 20 points will be docked.
-
-* For each of the 5 requests that do not work, 15 points will be docked.
-
-* If none of the above work, 5 points will be assigned assuming project builds and runs, and `README` is updated. Otherwise, 0 will be assigned.
 
 ## Authors
 
-Michal Young, Ram Durairajan. Updated by Ali Hassani.
+Fedi Aniefuna
