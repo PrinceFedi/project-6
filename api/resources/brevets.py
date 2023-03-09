@@ -7,6 +7,7 @@ from flask_restful import Resource
 # You need to implement this in database/models.py
 from database.models import Brevet
 
+
 # MongoEngine queries:
 # Brevet.objects() : similar to find_all. Returns a MongoEngine query
 # Brevet(...).save() : creates new brevet
@@ -27,3 +28,21 @@ from database.models import Brevet
 # it from a MongoEngine query object to a JSON and send back the JSON
 # directly instead of letting Flask-RESTful attempt to convert it to a
 # JSON for you.
+
+class BrevetsResource(Resource):
+    def get(self):
+        json_object = Brevet.objects().to_json()
+        return Response(json_object, mimetype="application/json", status=200)
+
+    def post(self):
+        # Read the entire request body as a JSON
+        # This will fail if the request body is NOT a JSON.
+        input_json = request.json
+
+        ## Because input_json is a dictionary, we can do this:
+        # title = input_json["title"] # Should be a string
+        # items = input_json["items"] # Should be a list of dictionaries
+        # result = TodoList(title=title, items=items).save()
+
+        result = Brevet(**input_json).save()
+        return {'_id': str(result.id)}, 200
