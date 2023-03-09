@@ -7,7 +7,6 @@ from flask_restful import Resource
 # You need to implement this in database/models.py
 from database.models import Brevet
 
-
 # MongoEngine queries:
 # Brevet.objects() : similar to find_all. Returns a MongoEngine query
 # Brevet(...).save() : creates new brevet
@@ -28,7 +27,6 @@ from database.models import Brevet
 # it from a MongoEngine query object to a JSON and send back the JSON
 # directly instead of letting Flask-RESTful attempt to convert it to a
 # JSON for you.
-
 class BrevetResource(Resource):
     def get(self, id):
         brevet = Brevet.objects.get(id=id).to_json()
@@ -37,8 +35,8 @@ class BrevetResource(Resource):
     def put(self, id):
         input_json = request.get_json()
         Brevet.objects.get(id=id).update(**input_json)
-        return {'id': str(id), 'status': 'updated'}, 200
+        return {'id': str(id)}, 200
 
     def delete(self, id):
         Brevet.objects.get(id=id).delete()
-        return {'id': str(id), 'status': 'deleted'}, 200
+        return {'id': str(id)}, 200
